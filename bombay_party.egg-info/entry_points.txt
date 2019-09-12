@@ -1,3 +1,0 @@
-[console_scripts]
-server = app.app:main
-
