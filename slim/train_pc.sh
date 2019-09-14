@@ -1,6 +1,8 @@
-DATASET_DIR=/home/amrit.krishnan/projects/bombay_rockers/data
+DATASET_DIR=/home/amrit.krishnan/projects/bombay_rockers/data/tfrecords
 TRAIN_DIR=train_logs
-python train_image_classifier.py \
+
+
+CUDA_VISIBLE_DEVICES=0 python train_image_classifier.py \
     --train_dir=${TRAIN_DIR} \
     --dataset_name=pc \
     --dataset_split_name=train \

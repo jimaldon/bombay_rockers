@@ -4,8 +4,10 @@ from __future__ import print_function
 
 import os
 from os.path import join
+import glob
 import sys
 import contextlib2
+from random import shuffle
 
 import numpy as np
 import cv2
@@ -16,28 +18,60 @@ import tensorflow as tf
 import dataset_utils
 
 
-_NUM_TRAIN_FILES = 4
+_NUM_TRAIN_FILES = 1
 
 
-def _create_tfrecord(dataset_dir, tfrecord_writer, classes_train):
+def _create_tfrecord_train(dataset_dir, tfrecord_writer, classes_train):
 	count = 0
+	all_image_paths, class_labels = [], []
 	for cls_train in classes_train:
-		image_names = list(filter(lambda x: x.endswith('JPG') or x.endswith('jpg'), os.listdir(join(dataset_dir, 'train', cls_train))))
-		num_images =  len(image_names)
-		for i, im_name in enumerate(image_names):
-			im_path = join(dataset_dir, 'train', cls_train, im_name)
-			with tf.gfile.Open(im_path, 'rb') as f:
-				img = cv2.imread(im_path)
-				_, encoded_image = cv2.imencode('.jpg', img)
-				label = classes_train[cls_train]
-				encoded_image = encoded_image.tobytes()
-				example = dataset_utils.image_to_tfexample(
-            		encoded_image, b'jpg', 256, 256, label)
+		images_dir = glob.glob(join(dataset_dir, 'train', cls_train, '*.JPG'))
+		all_image_paths.extend(images_dir)
+		class_labels.extend([classes_train[cls_train] for _ in range(len(images_dir))])
 
-				output_shard_index = count % _NUM_TRAIN_FILES
-				tfrecord_writer[output_shard_index].write(example.SerializeToString())
-				count += 1
-				print('Processed {} images'.format(count))
+	combined = list(zip(all_image_paths, class_labels))
+	shuffle(combined)
+	all_image_paths, class_labels = zip(*combined)
+
+	for i, im_path in enumerate(all_image_paths):
+		with tf.gfile.Open(im_path, 'rb') as f:
+			img = cv2.imread(im_path)
+			img_shape = img.shape
+			if img_shape != (256, 256, 3):
+				print('Weird image, skipping')
+				continue
+			_, encoded_image = cv2.imencode('.jpg', img)
+			label = class_labels[i]
+			encoded_image = encoded_image.tobytes()
+			example = dataset_utils.image_to_tfexample(
+        		encoded_image, b'jpg', 256, 256, label)
+
+			output_shard_index = count % _NUM_TRAIN_FILES
+			tfrecord_writer[output_shard_index].write(example.SerializeToString())
+			count += 1
+			print('Processed {} images'.format(count))
+
+
+def _create_tfrecord_test(dataset_dir, tfrecord_writer, classes_train):
+	count = 0
+	image_paths = glob.glob(join(dataset_dir, 'test_imgs', '*.JPG'))
+	num_images =  len(image_paths)
+	for i, im_path in enumerate(image_paths):
+		with tf.gfile.Open(im_path, 'rb') as f:
+			img = cv2.imread(im_path)
+			img_shape = img.shape
+			if img_shape != (256, 256, 3):
+				print('Weird image, skipping')
+				continue
+			_, encoded_image = cv2.imencode('.jpg', img)
+			encoded_image = encoded_image.tobytes()
+			example = dataset_utils.image_to_tfexample(
+        		encoded_image, b'jpg', 256, 256, -1)
+
+			output_shard_index = count % _NUM_TRAIN_FILES
+			tfrecord_writer[output_shard_index].write(example.SerializeToString())
+			count += 1
+			print('Processed {} images'.format(count))
 
 
 def _get_output_filename(dataset_dir, split_name):
@@ -48,7 +82,7 @@ def _get_output_filename(dataset_dir, split_name):
   Returns:
 	An absolute file path.
   """
-  return '%s/pc_dataset_%s.tfrecord' % (dataset_dir, split_name)
+  return '%s/pc_%s' % (dataset_dir, split_name)
 
 
 def run(dataset_dir):
@@ -60,7 +94,7 @@ def run(dataset_dir):
 	  tf.gfile.MakeDirs(dataset_dir)
 
   training_filename = _get_output_filename(dataset_dir, 'train')
-  # testing_filename = _get_output_filename(dataset_dir, 'test')
+  testing_filename = _get_output_filename(dataset_dir, 'val')
   
   classes_train = sorted(list(filter(lambda x: os.path.isdir(join(dataset_dir, 'train', x)), os.listdir(join(dataset_dir, 'train')))))
   classes_map = {}
@@ -68,11 +102,15 @@ def run(dataset_dir):
 	  classes_map[cls_train] = idx
 
   with contextlib2.ExitStack() as tf_record_close_stack:
-	  train_writer=dataset_utils.open_sharded_output_tfrecords(
-			tf_record_close_stack, training_filename, _NUM_TRAIN_FILES)
-			
-	  _create_tfrecord(dataset_dir, train_writer, classes_map)
-	  
+ 	  train_writer=dataset_utils.open_sharded_output_tfrecords(
+    		tf_record_close_stack, training_filename, _NUM_TRAIN_FILES)
+ 	  _create_tfrecord_train(dataset_dir, train_writer, classes_map)
+
+#   with contextlib2.ExitStack() as tf_record_close_stack:
+# 	  test_writer=dataset_utils.open_sharded_output_tfrecords(
+# 			tf_record_close_stack, testing_filename, _NUM_TRAIN_FILES)
+# 	  _create_tfrecord_test(dataset_dir, test_writer, classes_map)
+
   labels_to_class_names = dict(zip(range(len(classes_train)), classes_train))
   dataset_utils.write_label_file(labels_to_class_names, dataset_dir)
 
