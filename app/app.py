@@ -1,9 +1,12 @@
+import json
+
 from flask import Flask, jsonify, request
 import dash
 import logging
 import dash_html_components as html
 import dash_core_components as dcc
 import plotly.graph_objects as go
+from dash.dependencies import Input, Output
 
 
 logger = logging.getLogger(__name__)
@@ -25,10 +28,15 @@ app = dash.Dash(
     routes_pathname_prefix='/dash/'
 )
 
+pin_data = []
+
+with open('pin_data.json') as f:
+    pin_data = json.load(f)
+
 
 fig = go.Figure(go.Scattermapbox(
-        lat=(45.5305185,),
-        lon=(-73.6132051,),
+        lon=[point['lon'] for point in pin_data],
+        lat=[point['lat'] for point in pin_data],
         mode='markers',
         marker=go.scattermapbox.Marker(
             size=14
@@ -52,14 +60,60 @@ app.layout = html.Div([
         dcc.Graph(
             id='map',
             figure=fig
-        )
+        ),
+        html.Div(
+            'Location',
+            id='location-label',
+            style={'fontSize': 14}),
+        html.Img(
+            id='body-image',
+            src=''
+        ),
     ]
 )
 
 
+@app.callback(Output("body-image", "src"),
+              [Input("map", "hoverData")])
+def update_body_image(hover_data):
+    if hover_data:
+        point_index = hover_data['points'][0]['pointIndex']
+        src = get_image(point_index)
+    else:
+        src = ''
+
+    return src
+
+
+def get_image(index: int):
+    if index >= len(pin_data):
+        index = 0
+    return pin_data[index]['image_path']
+
+
+@app.callback(
+    Output(component_id='location-label', component_property='children'),
+    [Input("map", "hoverData")]
+)
+def update_output_div(hover_data):
+    if hover_data:
+        point_index = hover_data['points'][0]['pointIndex']
+
+        lon = pin_data[point_index]['lon']
+        lat = pin_data[point_index]['lat']
+        disease = pin_data[point_index]['disease_name']
+        time = pin_data[point_index]['timestamp']
+        location_text = f'({lon}, {lat})   Disease: {disease}    Time: {time}'
+    else:
+        location_text = ''
+
+    return location_text
+
+
 def main():
-    app.run_server()
+    app.run_server(debug=True)
     fig.show()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
