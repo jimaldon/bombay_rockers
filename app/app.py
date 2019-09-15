@@ -82,7 +82,7 @@ app.layout = html.Div([
             children=[
                 dcc.Graph(
                     id='map',
-                    style={'height': '500px'},
+                    style={'height': '500px', 'width': '1000px'},
                     figure=fig
                 ),
                 html.Div(
