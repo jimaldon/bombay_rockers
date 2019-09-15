@@ -1,0 +1,10 @@
+#main {
+    display: flex;
+    flex-direction: row;
+}
+
+#pinInfo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}

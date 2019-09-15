@@ -62,18 +62,28 @@ fig.update_layout(
 app.layout = html.Div([
         dcc.Markdown('''# Plant Disease Monitoring'''),
         dcc.Markdown('''---'''),
-        dcc.Graph(
-            id='map',
-            figure=fig
-        ),
         html.Div(
-            'Location',
-            id='location-label',
-            style={'fontSize': 14}),
-        html.Img(
-            id='body-image',
-            src=''
-        ),
+            id='main',
+            children=[
+                dcc.Graph(
+                    id='map',
+                    style={'height': '500px'},
+                    figure=fig
+                ),
+                html.Div(
+                    id='pinInfo',
+                    children=[
+                        html.Div(
+                            'Location',
+                            id='location-label',
+                            style={'fontSize': 14}),
+                        html.Img(
+                            id='body-image',
+                            src=''
+                        ),
+                    ]
+                )
+            ])
     ],
     style={'textAlign': 'center'}
 )
