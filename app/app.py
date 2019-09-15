@@ -1,5 +1,5 @@
+import os
 import json
-
 from flask import Flask, jsonify, request
 import dash
 import logging
@@ -7,6 +7,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
+import base64
 
 
 logger = logging.getLogger(__name__)
@@ -59,8 +60,21 @@ fig.update_layout(
         )
     )
 
+logo_png = '../docs/logo.png'
+logo_base64 = base64.b64encode(open(logo_png, 'rb').read()).decode('ascii')
+
+
 app.layout = html.Div([
-        dcc.Markdown('''# Plant Disease Monitoring'''),
+        html.Div([
+            html.Img(src='data:image/png;base64,{}'.format(logo_base64),
+                style={
+                    'height' : '5%',
+                    'width' : '5%',
+                    'float' : 'middle',
+                    'position' : 'relative',
+                    'padding-top' : 0,
+                    'padding-left' : 0},),
+            dcc.Markdown('''# Plant Disease Monitoring''')]),
         dcc.Markdown('''---'''),
         html.Div(
             id='main',
