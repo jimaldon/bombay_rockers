@@ -11,6 +11,8 @@ from dash.dependencies import Input, Output
 
 logger = logging.getLogger(__name__)
 server = Flask(__name__)
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 
 @server.route('/br', methods=['POST'])
 def index():
@@ -25,7 +27,8 @@ def get_index():
 app = dash.Dash(
     __name__,
     server=server,
-    routes_pathname_prefix='/dash/'
+    routes_pathname_prefix='/dash/',
+    external_stylesheets=external_stylesheets
 )
 
 pin_data = []
@@ -57,6 +60,8 @@ fig.update_layout(
     )
 
 app.layout = html.Div([
+        dcc.Markdown('''# Plant Disease Monitoring'''),
+        dcc.Markdown('''---'''),
         dcc.Graph(
             id='map',
             figure=fig
@@ -69,8 +74,11 @@ app.layout = html.Div([
             id='body-image',
             src=''
         ),
-    ]
+    ],
+    style={'textAlign': 'center'}
 )
+app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})
+
 
 
 @app.callback(Output("body-image", "src"),
@@ -103,7 +111,7 @@ def update_output_div(hover_data):
         lat = pin_data[point_index]['lat']
         disease = pin_data[point_index]['disease_name']
         time = pin_data[point_index]['timestamp']
-        location_text = f'({lon}, {lat})   Disease: {disease}    Time: {time}'
+        location_text = f'({lon}, {lat}) | Disease: {disease} | Time: {time}'
     else:
         location_text = ''
 
