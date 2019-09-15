@@ -18,7 +18,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+from os.path import basename
+import glob
 import math
+import json
+import logging
 import tensorflow as tf
 
 from datasets import dataset_factory
@@ -82,10 +87,30 @@ tf.app.flags.DEFINE_integer(
 tf.app.flags.DEFINE_bool(
     'quantize', False, 'whether to use quantized graph or not.')
 
+tf.app.flags.DEFINE_bool(
+    'save_results', False, 'whether to save results')
+
 FLAGS = tf.app.flags.FLAGS
 
 
+def _read_label_file():
+    f = open('labels.txt', 'r')
+    cls_names_map = {}
+    cls_names = f.read().splitlines()
+    for cls_name in cls_names:
+        cls_idx, cls_name_ = cls_name.split(':')
+        cls_names_map[int(cls_idx)] = cls_name_
+
+    return cls_names_map
+
+
 def main(_):
+  if FLAGS.save_results:
+      label_names_map = _read_label_file()
+      result_predictions = []
+      test_file_names = glob.glob('../data/test_imgs/*.JPG')
+      test_file_names = [basename(f) for f in test_file_names]
+
   if not FLAGS.dataset_dir:
     raise ValueError('You must supply the dataset directory with --dataset_dir')
 
@@ -115,6 +140,7 @@ def main(_):
         shuffle=False,
         common_queue_capacity=2 * FLAGS.batch_size,
         common_queue_min=FLAGS.batch_size)
+
     [image, label] = provider.get(['image', 'label'])
     label -= FLAGS.labels_offset
 
@@ -156,6 +182,7 @@ def main(_):
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
 
+
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
         'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
@@ -184,6 +211,12 @@ def main(_):
 
     tf.logging.info('Evaluating %s' % checkpoint_path)
 
+    # scaffold = tf.train.Scaffold(init_op=tf.global_variables_initializer())
+    # session_creator = tf.train.ChiefSessionCreator(
+    #     scaffold=scaffold,
+    #     master='',
+    #     checkpoint_filename_with_path=FLAGS.checkpoint_path)
+
     slim.evaluation.evaluate_once(
         master=FLAGS.master,
         checkpoint_path=checkpoint_path,
@@ -191,6 +224,13 @@ def main(_):
         num_evals=num_batches,
         eval_op=list(names_to_updates.values()),
         variables_to_restore=variables_to_restore)
+
+    # with tf.train.MonitoredSession(
+    #     session_creator=session_creator, hooks=None) as sess:
+    #     predictions_list = list(sess.run([predictions]))
+    #     result_predictions.extend(predictions_list)
+    #     print(result_predictions)      
+
 
 
 if __name__ == '__main__':

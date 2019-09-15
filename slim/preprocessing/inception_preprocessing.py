@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.ops import control_flow_ops
@@ -100,7 +101,7 @@ def distorted_bounding_box_crop(image,
                                 bbox,
                                 min_object_covered=0.1,
                                 aspect_ratio_range=(0.75, 1.33),
-                                area_range=(0.05, 1.0),
+                                area_range=(0.75, 1.0),
                                 max_attempts=100,
                                 scope=None):
   """Generates cropped_image using a one of the bboxes randomly distorted.
@@ -157,7 +158,7 @@ def preprocess_for_train(image,
                          height,
                          width,
                          bbox,
-                         fast_mode=True,
+                         fast_mode=False,
                          scope=None,
                          add_image_summaries=True,
                          random_crop=True):
@@ -234,6 +235,15 @@ def preprocess_for_train(image,
 
     # Randomly flip the image horizontally.
     distorted_image = tf.image.random_flip_left_right(distorted_image)
+    
+    # Random rotation.
+    rot_angle = tf.random_uniform([1], minval=-90, maxval=90, dtype=tf.float32, seed=None, name=None)
+    distorted_image = tf.contrib.image.rotate(
+        distorted_image,
+        rot_angle,
+        interpolation='BILINEAR',
+        name=None
+    )
 
     # Randomly distort the colors. There are 1 or 4 ways to do it.
     num_distort_cases = 1 if fast_mode else 4

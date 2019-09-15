@@ -38,8 +38,7 @@ def _create_tfrecord_train(dataset_dir, tfrecord_writer, classes_train):
 			img = cv2.imread(im_path)
 			img_shape = img.shape
 			if img_shape != (256, 256, 3):
-				print('Weird image, skipping')
-				continue
+				img = cv2.resize(img, (256, 256))
 			_, encoded_image = cv2.imencode('.jpg', img)
 			label = class_labels[i]
 			encoded_image = encoded_image.tobytes()
@@ -54,19 +53,18 @@ def _create_tfrecord_train(dataset_dir, tfrecord_writer, classes_train):
 
 def _create_tfrecord_test(dataset_dir, tfrecord_writer, classes_train):
 	count = 0
-	image_paths = glob.glob(join(dataset_dir, 'test_imgs', '*.JPG'))
+	image_paths = sorted(glob.glob(join(dataset_dir, 'test_imgs', '*.JPG')))
 	num_images =  len(image_paths)
 	for i, im_path in enumerate(image_paths):
 		with tf.gfile.Open(im_path, 'rb') as f:
 			img = cv2.imread(im_path)
 			img_shape = img.shape
 			if img_shape != (256, 256, 3):
-				print('Weird image, skipping')
-				continue
+				img = cv2.resize(img, (256, 256))
 			_, encoded_image = cv2.imencode('.jpg', img)
 			encoded_image = encoded_image.tobytes()
 			example = dataset_utils.image_to_tfexample(
-        		encoded_image, b'jpg', 256, 256, -1)
+        		encoded_image, b'jpg', 256, 256, 0)
 
 			output_shard_index = count % _NUM_TRAIN_FILES
 			tfrecord_writer[output_shard_index].write(example.SerializeToString())
@@ -106,10 +104,10 @@ def run(dataset_dir):
     		tf_record_close_stack, training_filename, _NUM_TRAIN_FILES)
  	  _create_tfrecord_train(dataset_dir, train_writer, classes_map)
 
-#   with contextlib2.ExitStack() as tf_record_close_stack:
-# 	  test_writer=dataset_utils.open_sharded_output_tfrecords(
-# 			tf_record_close_stack, testing_filename, _NUM_TRAIN_FILES)
-# 	  _create_tfrecord_test(dataset_dir, test_writer, classes_map)
+  with contextlib2.ExitStack() as tf_record_close_stack:
+	  test_writer=dataset_utils.open_sharded_output_tfrecords(
+			tf_record_close_stack, testing_filename, _NUM_TRAIN_FILES)
+	  _create_tfrecord_test(dataset_dir, test_writer, classes_map)
 
   labels_to_class_names = dict(zip(range(len(classes_train)), classes_train))
   dataset_utils.write_label_file(labels_to_class_names, dataset_dir)
