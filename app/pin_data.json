@@ -1,11 +1,4 @@
 [
-  {
-    "lat": 45.5305185,
-    "lon": -73.6132051,
-    "image_path": "/dash/assets/elevation_profile.png",
-    "disease_name": "Black rot",
-    "timestamp": "2019/09/14 18:43"
-  },
   {"disease_name":"Cherry_(including_sour)___Powdery_mildew",
     "image_path":"/dash/assets/1568564703640.jpg",
     "timestamp":"15\/09\/2019 12:25:03",
