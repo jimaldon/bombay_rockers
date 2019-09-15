@@ -204,9 +204,6 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                     }
                   });
                   queue.add(jsonObjectRequest);
-
-
-
                 }
               }
 
