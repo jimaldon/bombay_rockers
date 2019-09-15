@@ -57,7 +57,7 @@ fig.update_layout(
                 lon=-73.6132051,
             ),
             pitch=0,
-            zoom=20
+            zoom=18
         )
     )
 
