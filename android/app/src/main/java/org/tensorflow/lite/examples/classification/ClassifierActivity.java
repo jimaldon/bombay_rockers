@@ -35,6 +35,14 @@ import android.location.Location;
 
 import androidx.core.content.ContextCompat;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -164,7 +172,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
                   JSONObject obj = new JSONObject();
                   Date date = new Date(time);
-                  DateFormat format = new SimpleDateFormat("HH:mm:ss");
+                  DateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
                   String timest = format.format(date);
                   try {
                     obj.put("disease_name", results.get(0).getTitle());
@@ -183,6 +191,22 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
                   } catch (IOException e) {
                     e.printStackTrace();
                   }
+                  RequestQueue queue = Volley.newRequestQueue(ClassifierActivity.this);
+                  String url = "http://172.16.53.76:8050/br";
+                  JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, obj,
+                          new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                            }
+                          }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                    }
+                  });
+                  queue.add(jsonObjectRequest);
+
+
+
                 }
               }
 

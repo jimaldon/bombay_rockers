@@ -18,6 +18,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 @server.route('/br', methods=['POST'])
 def index():
     logger.info('covfefe')
+    print(request.json)
     return jsonify(request.json)
 
 @server.route('/br', methods=['GET'])
@@ -34,7 +35,7 @@ app = dash.Dash(
 
 pin_data = []
 
-with open('pin_data.json') as f:
+with open('/home/jf/workspace/bombay_rockers/app/pin_data.json') as f:
     pin_data = json.load(f)
 
 
@@ -143,7 +144,7 @@ def update_output_div(hover_data):
 
 
 def main():
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0')
     fig.show()
 
 
