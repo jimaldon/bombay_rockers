@@ -90,7 +90,7 @@ app.layout = html.Div([
                         html.Div(
                             'Location',
                             id='location-label',
-                            style={'fontSize': 14}),
+                            style={'fontSize': 14, 'width': '300px'}),
                         html.Img(
                             id='body-image',
                             src=''

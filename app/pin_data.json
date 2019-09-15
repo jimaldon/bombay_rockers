@@ -4,20 +4,20 @@
     "lon": -73.6132051,
     "image_path": "/dash/assets/elevation_profile.png",
     "disease_name": "Black rot",
-    "timestamp": "18:43"
+    "timestamp": "2019/09/14 18:43"
   },
   {
     "lat": 45.5305385,
     "lon": -73.6132351,
     "image_path": "/dash/assets/foo.jpg",
     "disease_name": "White rot",
-    "timestamp": "06:14"
+    "timestamp": "2019/09/14 06:14"
   },
   {
     "lat": 45.5305185,
     "lon": -73.6132651,
     "image_path": "/dash/assets/bar.jpg",
     "disease_name": "Green rot",
-    "timestamp": "13:57"
+    "timestamp": "2019/09/14 13:57"
   }
 ]
