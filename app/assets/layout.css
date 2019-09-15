@@ -9,7 +9,7 @@
     justify-content: center;
 }
 
-img {
+#body-image {
   display: block;
   max-width:500px;
   max-height:500px;
