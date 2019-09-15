@@ -27,8 +27,8 @@ app = dash.Dash(
 
 
 fig = go.Figure(go.Scattermapbox(
-        lat=(45.2905,),
-        lon=(-73.3345,),
+        lat=(45.5305185,),
+        lon=(-73.6132051,),
         mode='markers',
         marker=go.scattermapbox.Marker(
             size=14
@@ -40,11 +40,11 @@ fig.update_layout(
             accesstoken='pk.eyJ1IjoiamZ0YWlsbG9uIiwiYSI6ImNqeTBqNjhjYTAzcG0zb214cGE1bjB0djYifQ._sUkIemdyART3dhuOiDTow',
             bearing=0,
             center=go.layout.mapbox.Center(
-                lat=45,
-                lon=-73
+                lat=45.5305185,
+                lon=-73.6132051,
             ),
             pitch=0,
-            zoom=5
+            zoom=20
         )
     )
 
