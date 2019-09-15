@@ -525,6 +525,9 @@ public abstract class CameraActivity extends AppCompatActivity
         if (recognition.getConfidence() != null)
           recognitionValueTextView.setText(
               String.format("%.2f", (100 * recognition.getConfidence())) + "%");
+        String back = "background";
+        if (!recognition.getTitle().equals(back) && !recognition.getTitle().endsWith("healthy")) recognitionTextView.setAllCaps(true);
+
       }
 
       Recognition recognition1 = results.get(1);
