@@ -108,7 +108,7 @@ def main(_):
   if FLAGS.save_results:
       label_names_map = _read_label_file()
       result_predictions = []
-      test_file_names = glob.glob('../data/test_imgs/*.JPG')
+      test_file_names = glob.glob('../data/test_imgs/*.JPG') + glob.glob('../data/test_imgs/*.jpg')
       test_file_names = [basename(f) for f in test_file_names]
 
   if not FLAGS.dataset_dir:
@@ -182,13 +182,18 @@ def main(_):
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
 
-
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
         'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
         'Recall_5': slim.metrics.streaming_recall_at_k(
             logits, labels, 5),
     })
+
+    scaffold = tf.train.Scaffold(init_op=tf.global_variables_initializer())
+    session_creator = tf.train.ChiefSessionCreator(
+        scaffold=scaffold,
+        master='',
+        checkpoint_filename_with_path=FLAGS.checkpoint_path)
 
     # Print the summaries to screen.
     for name, value in names_to_values.items():
@@ -211,26 +216,29 @@ def main(_):
 
     tf.logging.info('Evaluating %s' % checkpoint_path)
 
-    # scaffold = tf.train.Scaffold(init_op=tf.global_variables_initializer())
-    # session_creator = tf.train.ChiefSessionCreator(
-    #     scaffold=scaffold,
-    #     master='',
-    #     checkpoint_filename_with_path=FLAGS.checkpoint_path)
+    with tf.train.MonitoredSession(
+        session_creator=session_creator, hooks=None) as sess:
+ 
+        for idx in range(int(num_batches)):
+            predictions_list = list(sess.run(predictions))
+            result_predictions.extend(predictions_list)
 
-    slim.evaluation.evaluate_once(
-        master=FLAGS.master,
-        checkpoint_path=checkpoint_path,
-        logdir=FLAGS.eval_dir,
-        num_evals=num_batches,
-        eval_op=list(names_to_updates.values()),
-        variables_to_restore=variables_to_restore)
+    if not FLAGS.save_results:
+        slim.evaluation.evaluate_once(
+            master=FLAGS.master,
+            checkpoint_path=checkpoint_path,
+            logdir=FLAGS.eval_dir,
+            num_evals=num_batches,
+            eval_op=list(names_to_updates.values()),
+            variables_to_restore=variables_to_restore)
+    else:
+        results_to_save = dict()
+        print(len(result_predictions), len(test_file_names))
+        for idx in range(len(test_file_names)):
+            results_to_save[test_file_names[idx]] = label_names_map[result_predictions[idx]]
 
-    # with tf.train.MonitoredSession(
-    #     session_creator=session_creator, hooks=None) as sess:
-    #     predictions_list = list(sess.run([predictions]))
-    #     result_predictions.extend(predictions_list)
-    #     print(result_predictions)      
-
+        with open("train_logs/test_predictions.json", "w") as fp:
+            json.dump(results_to_save, fp, indent=4, sort_keys=True)
 
 
 if __name__ == '__main__':
