@@ -35,7 +35,7 @@ app = dash.Dash(
 
 pin_data = []
 
-with open('/home/jf/workspace/bombay_rockers/app/pin_data.json') as f:
+with open('pin_data.json') as f:
     pin_data = json.load(f)
 
 
