@@ -16,18 +16,37 @@
 
 package org.tensorflow.lite.examples.classification;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
+import android.location.Criteria;
+import android.location.LocationManager;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
+import android.location.Location;
+
+import androidx.core.content.ContextCompat;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.tensorflow.lite.examples.classification.env.BorderedText;
 import org.tensorflow.lite.examples.classification.env.ImageUtils;
 import org.tensorflow.lite.examples.classification.env.Logger;
@@ -50,6 +69,7 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   private Matrix cropToFrameTransform;
   private BorderedText borderedText;
 
+
   @Override
   protected int getLayoutId() {
     return R.layout.camera_connection_fragment;
@@ -59,7 +79,9 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
   protected Size getDesiredPreviewFrameSize() {
     return DESIRED_PREVIEW_SIZE;
   }
-
+  Long initTime = System.currentTimeMillis();
+  String apppath = "/mnt/sdcard/tensorlight/";
+  String session = apppath + initTime.toString();
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
     final float textSizePx =
@@ -97,8 +119,12 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
 
     cropToFrameTransform = new Matrix();
     frameToCropTransform.invert(cropToFrameTransform);
-  }
+    File newFile = new File(apppath);
+    newFile.mkdir();
+    File sessionPath = new File(session);
+    sessionPath.mkdir();
 
+  }
   @Override
   protected void processImage() {
     rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
@@ -115,6 +141,50 @@ public class ClassifierActivity extends CameraActivity implements OnImageAvailab
               lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
               LOGGER.v("Detect: %s", results);
               cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+              Long time = System.currentTimeMillis();
+              String path = session + "/" + time.toString() + ".jpg";
+              if (!results.get(0).getTitle().equals("background") && !results.get(0).getTitle().endsWith("healthy")) {
+
+                try (FileOutputStream out = new FileOutputStream(path)) {
+                  croppedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
+                  // PNG is a lossless format, the compression factor (100) is ignored
+                } catch (IOException e) {
+                  e.printStackTrace();
+                }
+
+                if (ContextCompat.checkSelfPermission(ClassifierActivity.this, Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED) {
+                  LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                  Criteria criteria = new Criteria();
+                  String bestProvider = locationManager.getBestProvider(criteria, false);
+                  Location location = locationManager.getLastKnownLocation(bestProvider);
+                  double lat = location.getLatitude();
+                  double lon = location.getLongitude();
+
+
+                  JSONObject obj = new JSONObject();
+                  Date date = new Date(time);
+                  DateFormat format = new SimpleDateFormat("HH:mm:ss");
+                  String timest = format.format(date);
+                  try {
+                    obj.put("disease_name", results.get(0).getTitle());
+                    obj.put("image_path", path);
+                    obj.put("timestamp", timest);
+                    obj.put("lat", lat);
+                    obj.put("lon", lon);
+                  } catch (JSONException e) {
+                    e.printStackTrace();
+                  }
+                  try (FileWriter file = new FileWriter(path.replace(".jpg", ".json"))) {
+
+                    file.write(obj.toString());
+                    file.flush();
+
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
+                }
+              }
 
               runOnUiThread(
                   new Runnable() {
