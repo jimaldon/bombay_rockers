@@ -99,8 +99,8 @@ public abstract class CameraActivity extends AppCompatActivity
   private Spinner deviceSpinner;
   private TextView threadsTextView;
 
-  private Model model = Model.QUANTIZED;
-  private Device device = Device.CPU;
+  private Model model = Model.FLOAT;
+  private Device device = Device.GPU;
   private int numThreads = -1;
 
   @Override
