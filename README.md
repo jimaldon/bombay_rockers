@@ -14,6 +14,7 @@
  * `slim/eval_pc.sh` can be used to check accuracy on training set or validation set.
  * The flask app for monitoring is run by `python3 app/app.py`.
  * `slim/export_frozen_graph.sh` and `slim/export_inference_graph.sh` to be used for converting saved TF models to frozen graph and `tflite_converter.py` to convert to TFLite.
+ * `slim/train_logs` has the exported frozen graph as well the `JSON` file with predictions on the test set.
  * Android app code inside `android`.
  
  
