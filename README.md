@@ -18,7 +18,7 @@
  * Android app code inside `android`.
  
 
- ### Flask app for visualizing GPS coords of images taken and their predictions.
+ ### Flask app for visualizing GPS coords of images taken and their predictions
  <img src="/docs/app.png" width="400">
  
  ### 3D sparse map from VO (outdoor)
