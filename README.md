@@ -17,4 +17,15 @@
  * `slim/train_logs` has the exported frozen graph as well the `JSON` file with predictions on the test set.
  * Android app code inside `android`.
  
+
+ ### Flask app for visualizing GPS coords of images taken and their predictions.
+ <img src="/docs/app.png" width="400">
  
+ ### 3D sparse map from VO (outdoor)
+ <img src="/docs/vo_outdoor.png" width="400">
+ 
+ ### 3D sparse map from VO (indoor)
+ <img src="/docs/vo_indoor.png" width="400"> 
+ 
+ ### Live demo during hackathon
+ <img src="/docs/live_demo.png" width="400">
